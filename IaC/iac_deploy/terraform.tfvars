@@ -6,6 +6,7 @@ region       = "us-east-2"
 
 # EC2 instance variables
 ami            = "ami-0a0d9cf81c479446a"
+ami_fastapi = "ami-06f7db4d07f83825a"
 instance_type  = "t2.micro"
 ec2_flask_tag = "EC2-Flask"
 ec2_fastapi_tag = "EC2-Fastapi"
@@ -24,7 +25,7 @@ db_name                   = "postgres"
 db_username               = "postgres"
 db_password               = "Vasco.123"
 db_skip_final_snapshot    = true
-db_publicly_accessible    = true
+db_publicly_accessible    = false
 db_tag = "Save-Request-Data"
 
 

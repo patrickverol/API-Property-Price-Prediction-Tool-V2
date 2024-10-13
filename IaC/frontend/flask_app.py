@@ -7,7 +7,7 @@ import os
 load_dotenv()  # This will load the .env file
 
 # Use getenv with a fallback value
-public_dns = os.getenv('AWS_EC2_FASTAPI_DNS')
+private_ip = os.getenv('AWS_EC2_FASTAPI_IP')
 
 app = Flask(__name__)
 
@@ -97,7 +97,7 @@ def index():
             # Make asynchronous prediction request to FastAPI
             async def get_prediction():
                 async with httpx.AsyncClient() as client:
-                    response = await client.post(f"http://{public_dns}:5001/prever/", json=dados_entrada)
+                    response = await client.post(f"http://{private_ip}:5001/prever/", json=dados_entrada)
                     response.raise_for_status()
                     return response.json()
 

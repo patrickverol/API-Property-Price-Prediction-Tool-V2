@@ -1,7 +1,7 @@
 resource "aws_s3_bucket" "project_ml_bucket" {
   bucket = "${var.project_name}-${var.personal_id}-${var.bucket_name}"
 
-  depends_on = [aws_db_instance.rds_db, null_resource.init_db]
+  depends_on = [null_resource.init_db, aws_instance.ec2_fastapi]
 
   tags = {
     ProjectName = var.project_name
