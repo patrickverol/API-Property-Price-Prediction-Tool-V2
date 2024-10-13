@@ -8,5 +8,5 @@ terraform.tfstate.backup
 teste_module
 LEIAME.txt
 capa.jpg
-IaC/old_file
-IaC/iac_deploy/my_private_key.pem
+.terraform.tfstate.lock.info
+my_private_key.pem
