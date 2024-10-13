@@ -15,6 +15,7 @@
     <a href = "https://docs.docker.com/"><img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" target="_blank"></a>
     <a href = "https://www.postgresql.org/docs/"><img src="https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white" target="_blank"></a>
     <a href = "https://flask.palletsprojects.com/en/3.0.x/"><img src="https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white" target="_blank"></a>
+    <a href = "https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" target="_blank"></a>
     <a href = "https://scikit-learn.org/stable/"><img src="https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white" target="_blank"></a>
     <a href = "https://pandas.pydata.org/docs/index.html"><img src="https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white" target="_blank"></a>
     <a href = "https://numpy.org/doc/"><img src="https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white" target="_blank"></a>
@@ -24,7 +25,13 @@
 
 This project automates the deployment of infrastructure and APIs for a machine learning application on AWS using Terraform. It provisions EC2, RDS, and S3 resources, ensuring smooth integration with the Flask backend and PostgreSQL database. The solution simplifies infrastructure management and accelerates API deployment for ML workflows.
 
-If you want more details about how the model was trained, please acess the folder data_science, where there is a complete data science project explaining the ML model.
+In this version, the infrastruture was updated in order to guarantee more security.
+
+ - The EC2 with Flask in the public subnet handles requests and forwards them to an EC2 with FastAPI in a private subnet.
+ - The EC2 with FastAPI processes data and securely sends it to an RDS, which is also in a private subnet.
+ - A Bastion Host in a public subnet is used to access the FastAPI EC2 for administrative tasks.
+ - The separation of public and private subnets enhances security by isolating the backend and database from direct internet exposure.
+ - This architecture minimizes attack surfaces while maintaining controlled access to critical resources.
 
 ## Installation and configuration
 
@@ -47,12 +54,12 @@ If you want more details about how the model was trained, please acess the folde
   4. Run the command below to create the Docker image
 
 ```bash
-  docker build -t ml-app-terraform-image:modelo1 .
+  docker build -t ml-app-terraform-image:version2 .
 ```
   5. Run the command below to create the Docker container
 
 ```bash
-  docker run -dit --name ml-app-terraform -p 5000:5000 -v ./IaC:/iac ml-app-terraform-image:modelo1 /bin/bash
+  docker run -dit --name ml-app-terraform-v2 -v ./IaC:/iac ml-app-terraform-image:version2 /bin/bash
 
   # NOTE: On Windows you must replace ./IaC with the full folder path, for example: E:\Documentos_Novos\01_Projetos\Airbnb\IaC
 ```
@@ -81,24 +88,26 @@ If you want more details about how the model was trained, please acess the folde
   # The terraform will ask to you to confirm, just write "yes".
 ```
   10. Wait a few minutes until the terraform finish to create the infrastruture. 
-  After that, the terraform will provide to you two outputs (like defined in the file .IaC/iac_deploy/outputs.tf)
+  After that, the terraform will provide to you five outputs (like defined in the file .IaC/iac_deploy/outputs.tf)
   The first one is the public IP to acess the Flask Application.
   Copy the adress and paste in your browser, remember to add ":5000", the port that we defined in the code to acess the application. 
 ```bash
   # The complete address will be something like that
-  http://ec2-3-147-55-96.us-east-2.compute.amazonaws.com:5000/
+  http://10.0.2.133:5000/
 ```
-  11. If you want to acess the RDS database, install the Postgres in your computer, and send the credentials below.
-  The second output, is the host adress of the RDS, witch is generated after the creation of the RDS.
-  Replace <output_host_address> for the second output.
+  11. If you want to acess the RDS database, remember we're using a Bastion Host arquitecture.
+  So, the first thing is to acess the Bastion Host via SSH. Then, write the command below and replace the ${aws_instance.ec2_fastapi.private_ip} for the second output (instance_private_ip_fastapi).
 ```bash
-  Host name/adress: <output_host_address>
-  Port: 5432
-  Maintenance database: postgres
-  Username:postgres
-  Password: Vasco.123
+  ssh -o StrictHostKeyChecking=no -i /home/ec2-user/my_private_key.pem ec2-user@${aws_instance.ec2_fastapi.private_ip}
 ```
-
+  12. After connect to EC2 with Fastapi, that has acess to the RDS, write the command below and replace the ${aws_db_instance.rds_db.address} for the third output (rds_endpoint).
+```bash
+  PGPASSWORD=Vasco.123 psql --host=${aws_db_instance.rds_db.address} --port=5432 --username=postgres --dbname=postgres --file=/backend/create_database.sql
+```  
+  13. Now you can write commands to the Postgres via psql, write the command below to see the data.
+```bash
+  SELECT * FROM especificacoes_casa LIMIT 5;
+```      
 
 ## Contact
 
